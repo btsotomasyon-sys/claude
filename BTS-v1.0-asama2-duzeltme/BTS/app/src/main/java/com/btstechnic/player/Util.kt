@@ -37,3 +37,17 @@ object Net {
         } finally { c.disconnect() }
     }
 }
+
+/** Ağ hatalarını anlaşılır Türkçe iletiye çevirir. */
+fun friendly(e: Exception): String {
+    val m = e.message ?: ""
+    return when {
+        e is java.net.UnknownHostException -> "Sunucu adresi bulunamadı. Adresi ve internet bağlantınızı kontrol edin."
+        e is java.net.SocketTimeoutException -> "Sunucu yanıt vermedi (zaman aşımı)."
+        e is javax.net.ssl.SSLException -> "Güvenli bağlantı (SSL) hatası. Adresi http:// ile deneyin."
+        e is java.net.ConnectException || m.contains("Failed to connect") ->
+            "Sunucuya bağlanılamadı. Adres veya port yanlış olabilir, sunucu kapalı olabilir ya da internet sağlayıcınız erişimi engelliyor olabilir."
+        m.startsWith("HTTP 401") || m.startsWith("HTTP 403") -> "Sunucu erişimi reddetti ($m). Kullanıcı adı, şifre veya cihaz kısıtlaması olabilir."
+        else -> m.ifEmpty { e.javaClass.simpleName }
+    }
+}
